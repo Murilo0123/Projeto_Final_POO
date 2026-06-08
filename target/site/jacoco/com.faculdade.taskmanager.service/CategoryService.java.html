@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">taskmanager</a> &gt; <a href="index.source.html" class="el_package">com.faculdade.taskmanager.service</a> &gt; <span class="el_source">CategoryService.java</span></div><h1>CategoryService.java</h1><pre class="source lang-java linenums">package com.faculdade.taskmanager.service;
+
+import com.faculdade.taskmanager.dto.CategoryRequestDTO;
+import com.faculdade.taskmanager.dto.CategoryResponseDTO;
+import com.faculdade.taskmanager.exception.BusinessException;
+import com.faculdade.taskmanager.exception.ResourceNotFoundException;
+import com.faculdade.taskmanager.model.Category;
+import com.faculdade.taskmanager.repository.CategoryRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Camada de serviço para gerenciamento de categorias.
+ */
+@Service
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+
+<span class="fc" id="L23">    public CategoryService(CategoryRepository categoryRepository) {</span>
+<span class="fc" id="L24">        this.categoryRepository = categoryRepository;</span>
+<span class="fc" id="L25">    }</span>
+
+    @Transactional
+    public CategoryResponseDTO create(CategoryRequestDTO dto) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (categoryRepository.existsByNameIgnoreCase(dto.getName())) {</span>
+<span class="fc" id="L30">            throw new BusinessException(&quot;Já existe uma categoria com o nome '&quot; + dto.getName() + &quot;'.&quot;);</span>
+        }
+
+<span class="fc" id="L33">        Category category = Category.builder()</span>
+<span class="fc" id="L34">                .name(dto.getName())</span>
+<span class="fc" id="L35">                .description(dto.getDescription())</span>
+<span class="fc" id="L36">                .build();</span>
+
+<span class="fc" id="L38">        Category saved = categoryRepository.save(category);</span>
+<span class="fc" id="L39">        return toResponseDTO(saved);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;CategoryResponseDTO&gt; findAll() {
+<span class="fc" id="L44">        return categoryRepository.findAll()</span>
+<span class="fc" id="L45">                .stream()</span>
+<span class="fc" id="L46">                .map(this::toResponseDTO)</span>
+<span class="fc" id="L47">                .collect(Collectors.toList());</span>
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryResponseDTO findById(Long id) {
+<span class="fc" id="L52">        Category category = findCategoryOrThrow(id);</span>
+<span class="fc" id="L53">        return toResponseDTO(category);</span>
+    }
+
+    @Transactional
+    public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
+<span class="fc" id="L58">        Category category = findCategoryOrThrow(id);</span>
+
+        // Verifica se outro registro já usa esse nome
+<span class="fc" id="L61">        categoryRepository.findByNameIgnoreCase(dto.getName())</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">                .filter(existing -&gt; !existing.getId().equals(id))</span>
+<span class="fc" id="L63">                .ifPresent(existing -&gt; {</span>
+<span class="fc" id="L64">                    throw new BusinessException(&quot;Já existe uma categoria com o nome '&quot; + dto.getName() + &quot;'.&quot;);</span>
+                });
+
+<span class="fc" id="L67">        category.setName(dto.getName());</span>
+<span class="fc" id="L68">        category.setDescription(dto.getDescription());</span>
+<span class="fc" id="L69">        Category updated = categoryRepository.save(category);</span>
+<span class="fc" id="L70">        return toResponseDTO(updated);</span>
+    }
+
+    @Transactional
+    public void delete(Long id) {
+<span class="fc" id="L75">        Category category = findCategoryOrThrow(id);</span>
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">        if (category.getTasks() != null &amp;&amp; !category.getTasks().isEmpty()) {</span>
+<span class="fc" id="L77">            throw new BusinessException(&quot;Não é possível excluir uma categoria que possui tarefas vinculadas.&quot;);</span>
+        }
+<span class="fc" id="L79">        categoryRepository.delete(category);</span>
+<span class="fc" id="L80">    }</span>
+
+    private Category findCategoryOrThrow(Long id) {
+<span class="fc" id="L83">        return categoryRepository.findById(id)</span>
+<span class="fc" id="L84">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoria com ID &quot; + id + &quot; não encontrada.&quot;));</span>
+    }
+
+    private CategoryResponseDTO toResponseDTO(Category category) {
+<span class="fc" id="L88">        return CategoryResponseDTO.builder()</span>
+<span class="fc" id="L89">                .id(category.getId())</span>
+<span class="fc" id="L90">                .name(category.getName())</span>
+<span class="fc" id="L91">                .description(category.getDescription())</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                .taskCount(category.getTasks() != null ? category.getTasks().size() : 0)</span>
+<span class="fc" id="L93">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

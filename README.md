@@ -53,11 +53,11 @@ src/main/java/com/faculdade/taskmanager/
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/seu-grupo/taskmanager.git
+git clone https://github.com/Murilo0123/Projeto_Final_POO.git
 cd taskmanager
 
 # 2. Execute a aplicação (perfil dev com H2)
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # 3. Acesse o Swagger UI
 http://localhost:8080/swagger-ui.html
@@ -71,7 +71,7 @@ http://localhost:8080/h2-console
 
 ```bash
 # Roda os testes e gera relatório de cobertura JaCoCo
-./mvnw test
+mvn test
 
 # Relatório de cobertura gerado em:
 # target/site/jacoco/index.html
@@ -166,7 +166,7 @@ curl -X DELETE http://localhost:8080/tasks/1
    - `DATABASE_USERNAME` → usuário do banco
    - `DATABASE_PASSWORD` → senha do banco
    - `SPRING_PROFILES_ACTIVE` → `prod`
-4. O Render detecta automaticamente o `pom.xml` e executa `./mvnw package` para gerar o `.jar`.
+4. O Render detecta automaticamente o `pom.xml` e executa `mvn package` para gerar o `.jar`.
 
 > **Importante:** nenhuma senha ou credencial está no código-fonte ou nos arquivos `.properties`. Todas as informações sensíveis são gerenciadas via variáveis de ambiente na plataforma.
 

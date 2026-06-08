@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoryController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">taskmanager</a> &gt; <a href="index.source.html" class="el_package">com.faculdade.taskmanager.controller</a> &gt; <span class="el_source">CategoryController.java</span></div><h1>CategoryController.java</h1><pre class="source lang-java linenums">package com.faculdade.taskmanager.controller;
+
+import com.faculdade.taskmanager.dto.CategoryRequestDTO;
+import com.faculdade.taskmanager.dto.CategoryResponseDTO;
+import com.faculdade.taskmanager.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * Controlador REST para gerenciamento de categorias.
+ */
+@RestController
+@RequestMapping(&quot;/categories&quot;)
+@Tag(name = &quot;Categorias&quot;, description = &quot;Operações de gerenciamento de categorias de tarefas&quot;)
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+<span class="nc" id="L29">    public CategoryController(CategoryService categoryService) {</span>
+<span class="nc" id="L30">        this.categoryService = categoryService;</span>
+<span class="nc" id="L31">    }</span>
+
+    @PostMapping
+    @Operation(summary = &quot;Criar categoria&quot;, description = &quot;Cria uma nova categoria&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Categoria criada com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Dados inválidos&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Nome de categoria já existente&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;CategoryResponseDTO&gt; create(@Valid @RequestBody CategoryRequestDTO dto) {
+<span class="nc" id="L41">        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(dto));</span>
+    }
+
+    @GetMapping
+    @Operation(summary = &quot;Listar categorias&quot;, description = &quot;Retorna todas as categorias cadastradas&quot;)
+    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista retornada com sucesso&quot;)
+    public ResponseEntity&lt;List&lt;CategoryResponseDTO&gt;&gt; findAll() {
+<span class="nc" id="L48">        return ResponseEntity.ok(categoryService.findAll());</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Buscar categoria por ID&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Categoria encontrada&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Categoria não encontrada&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;CategoryResponseDTO&gt; findById(
+            @Parameter(description = &quot;ID da categoria&quot;) @PathVariable Long id) {
+<span class="nc" id="L59">        return ResponseEntity.ok(categoryService.findById(id));</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Atualizar categoria&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Categoria atualizada&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Categoria não encontrada&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Nome já em uso&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;CategoryResponseDTO&gt; update(
+            @Parameter(description = &quot;ID da categoria&quot;) @PathVariable Long id,
+            @Valid @RequestBody CategoryRequestDTO dto) {
+<span class="nc" id="L72">        return ResponseEntity.ok(categoryService.update(id, dto));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Deletar categoria&quot;,
+               description = &quot;Remove uma categoria. Não é possível remover categorias com tarefas vinculadas.&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Categoria removida&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Categoria não encontrada&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Categoria possui tarefas vinculadas&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;Void&gt; delete(
+            @Parameter(description = &quot;ID da categoria&quot;) @PathVariable Long id) {
+<span class="nc" id="L85">        categoryService.delete(id);</span>
+<span class="nc" id="L86">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

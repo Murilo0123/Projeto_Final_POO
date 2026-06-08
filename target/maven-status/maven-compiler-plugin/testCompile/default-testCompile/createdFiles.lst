@@ -1,0 +1,3 @@
+com\faculdade\taskmanager\controller\TaskControllerTest.class
+com\faculdade\taskmanager\service\CategoryServiceTest.class
+com\faculdade\taskmanager\service\TaskServiceTest.class

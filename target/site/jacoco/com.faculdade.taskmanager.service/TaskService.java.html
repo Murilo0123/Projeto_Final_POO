@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">taskmanager</a> &gt; <a href="index.source.html" class="el_package">com.faculdade.taskmanager.service</a> &gt; <span class="el_source">TaskService.java</span></div><h1>TaskService.java</h1><pre class="source lang-java linenums">package com.faculdade.taskmanager.service;
+
+import com.faculdade.taskmanager.dto.TaskRequestDTO;
+import com.faculdade.taskmanager.dto.TaskResponseDTO;
+import com.faculdade.taskmanager.exception.BusinessException;
+import com.faculdade.taskmanager.exception.ResourceNotFoundException;
+import com.faculdade.taskmanager.model.Category;
+import com.faculdade.taskmanager.model.Task;
+import com.faculdade.taskmanager.model.TaskStatus;
+import com.faculdade.taskmanager.repository.CategoryRepository;
+import com.faculdade.taskmanager.repository.TaskRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Camada de serviço responsável pelas regras de negócio das tarefas.
+ * Usa injeção de dependências via construtor (boas práticas de POO).
+ */
+@Service
+public class TaskService {
+
+    private final TaskRepository taskRepository;
+    private final CategoryRepository categoryRepository;
+
+    // Injeção via construtor (baixo acoplamento)
+<span class="fc" id="L29">    public TaskService(TaskRepository taskRepository, CategoryRepository categoryRepository) {</span>
+<span class="fc" id="L30">        this.taskRepository = taskRepository;</span>
+<span class="fc" id="L31">        this.categoryRepository = categoryRepository;</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Cria uma nova tarefa.
+     */
+    @Transactional
+    public TaskResponseDTO create(TaskRequestDTO dto) {
+<span class="fc" id="L39">        Task task = buildTaskFromDTO(dto, new Task());</span>
+<span class="fc" id="L40">        Task saved = taskRepository.save(task);</span>
+<span class="fc" id="L41">        return toResponseDTO(saved);</span>
+    }
+
+    /**
+     * Lista todas as tarefas.
+     */
+    @Transactional(readOnly = true)
+    public List&lt;TaskResponseDTO&gt; findAll() {
+<span class="fc" id="L49">        return taskRepository.findAll()</span>
+<span class="fc" id="L50">                .stream()</span>
+<span class="fc" id="L51">                .map(this::toResponseDTO)</span>
+<span class="fc" id="L52">                .collect(Collectors.toList());</span>
+    }
+
+    /**
+     * Busca uma tarefa pelo ID.
+     */
+    @Transactional(readOnly = true)
+    public TaskResponseDTO findById(Long id) {
+<span class="fc" id="L60">        Task task = findTaskOrThrow(id);</span>
+<span class="fc" id="L61">        return toResponseDTO(task);</span>
+    }
+
+    /**
+     * Atualiza uma tarefa existente.
+     */
+    @Transactional
+    public TaskResponseDTO update(Long id, TaskRequestDTO dto) {
+<span class="fc" id="L69">        Task task = findTaskOrThrow(id);</span>
+<span class="fc" id="L70">        buildTaskFromDTO(dto, task);</span>
+<span class="fc" id="L71">        Task updated = taskRepository.save(task);</span>
+<span class="fc" id="L72">        return toResponseDTO(updated);</span>
+    }
+
+    /**
+     * Atualiza apenas o status de uma tarefa (PATCH).
+     */
+    @Transactional
+    public TaskResponseDTO updateStatus(Long id, TaskStatus newStatus) {
+<span class="fc" id="L80">        Task task = findTaskOrThrow(id);</span>
+
+        // Regra de negócio: tarefa CANCELLED não pode ser reativada
+<span class="fc bfc" id="L83" title="All 4 branches covered.">        if (task.getStatus() == TaskStatus.CANCELLED &amp;&amp; newStatus != TaskStatus.CANCELLED) {</span>
+<span class="fc" id="L84">            throw new BusinessException(&quot;Tarefas canceladas não podem ser reativadas.&quot;);</span>
+        }
+
+<span class="fc" id="L87">        task.setStatus(newStatus);</span>
+<span class="fc" id="L88">        Task updated = taskRepository.save(task);</span>
+<span class="fc" id="L89">        return toResponseDTO(updated);</span>
+    }
+
+    /**
+     * Remove uma tarefa pelo ID.
+     */
+    @Transactional
+    public void delete(Long id) {
+<span class="fc" id="L97">        Task task = findTaskOrThrow(id);</span>
+<span class="fc" id="L98">        taskRepository.delete(task);</span>
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * Filtra tarefas pelo status.
+     */
+    @Transactional(readOnly = true)
+    public List&lt;TaskResponseDTO&gt; findByStatus(TaskStatus status) {
+<span class="fc" id="L106">        return taskRepository.findByStatus(status)</span>
+<span class="fc" id="L107">                .stream()</span>
+<span class="fc" id="L108">                .map(this::toResponseDTO)</span>
+<span class="fc" id="L109">                .collect(Collectors.toList());</span>
+    }
+
+    // =====================
+    // Métodos auxiliares privados
+    // =====================
+
+    private Task findTaskOrThrow(Long id) {
+<span class="fc" id="L117">        return taskRepository.findById(id)</span>
+<span class="fc" id="L118">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Tarefa com ID &quot; + id + &quot; não encontrada.&quot;));</span>
+    }
+
+    private Task buildTaskFromDTO(TaskRequestDTO dto, Task task) {
+<span class="fc" id="L122">        task.setTitle(dto.getTitle());</span>
+<span class="fc" id="L123">        task.setDescription(dto.getDescription());</span>
+<span class="fc" id="L124">        task.setStatus(dto.getStatus());</span>
+<span class="fc" id="L125">        task.setDueDate(dto.getDueDate());</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (dto.getCategoryId() != null) {</span>
+<span class="fc" id="L128">            Category category = categoryRepository.findById(dto.getCategoryId())</span>
+<span class="fc" id="L129">                    .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L130">                            &quot;Categoria com ID &quot; + dto.getCategoryId() + &quot; não encontrada.&quot;));</span>
+<span class="fc" id="L131">            task.setCategory(category);</span>
+<span class="fc" id="L132">        } else {</span>
+<span class="fc" id="L133">            task.setCategory(null);</span>
+        }
+
+<span class="fc" id="L136">        return task;</span>
+    }
+
+    private TaskResponseDTO toResponseDTO(Task task) {
+<span class="fc" id="L140">        return TaskResponseDTO.builder()</span>
+<span class="fc" id="L141">                .id(task.getId())</span>
+<span class="fc" id="L142">                .title(task.getTitle())</span>
+<span class="fc" id="L143">                .description(task.getDescription())</span>
+<span class="fc" id="L144">                .status(task.getStatus())</span>
+<span class="fc" id="L145">                .dueDate(task.getDueDate())</span>
+<span class="fc" id="L146">                .createdAt(task.getCreatedAt())</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                .categoryId(task.getCategory() != null ? task.getCategory().getId() : null)</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                .categoryName(task.getCategory() != null ? task.getCategory().getName() : null)</span>
+<span class="fc" id="L149">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

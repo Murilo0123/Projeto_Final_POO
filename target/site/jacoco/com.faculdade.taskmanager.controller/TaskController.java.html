@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">taskmanager</a> &gt; <a href="index.source.html" class="el_package">com.faculdade.taskmanager.controller</a> &gt; <span class="el_source">TaskController.java</span></div><h1>TaskController.java</h1><pre class="source lang-java linenums">package com.faculdade.taskmanager.controller;
+
+import com.faculdade.taskmanager.dto.TaskRequestDTO;
+import com.faculdade.taskmanager.dto.TaskResponseDTO;
+import com.faculdade.taskmanager.model.TaskStatus;
+import com.faculdade.taskmanager.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * Controlador REST para gerenciamento de tarefas.
+ * Expõe 7 rotas com os verbos HTTP: GET, POST, PUT, PATCH, DELETE.
+ */
+@RestController
+@RequestMapping(&quot;/tasks&quot;)
+@Tag(name = &quot;Tarefas&quot;, description = &quot;Operações de gerenciamento de tarefas&quot;)
+public class TaskController {
+
+    private final TaskService taskService;
+
+<span class="fc" id="L32">    public TaskController(TaskService taskService) {</span>
+<span class="fc" id="L33">        this.taskService = taskService;</span>
+<span class="fc" id="L34">    }</span>
+
+    // ============================================================
+    // POST /tasks — Criar nova tarefa
+    // ============================================================
+    @PostMapping
+    @Operation(summary = &quot;Criar tarefa&quot;, description = &quot;Cria uma nova tarefa no sistema&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Tarefa criada com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Dados de entrada inválidos&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Violação de regra de negócio&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;TaskResponseDTO&gt; create(@Valid @RequestBody TaskRequestDTO dto) {
+<span class="fc" id="L47">        TaskResponseDTO response = taskService.create(dto);</span>
+<span class="fc" id="L48">        return ResponseEntity.status(HttpStatus.CREATED).body(response);</span>
+    }
+
+    // ============================================================
+    // GET /tasks — Listar todas as tarefas
+    // ============================================================
+    @GetMapping
+    @Operation(summary = &quot;Listar tarefas&quot;, description = &quot;Retorna todas as tarefas cadastradas&quot;)
+    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Lista retornada com sucesso&quot;)
+    public ResponseEntity&lt;List&lt;TaskResponseDTO&gt;&gt; findAll() {
+<span class="fc" id="L58">        return ResponseEntity.ok(taskService.findAll());</span>
+    }
+
+    // ============================================================
+    // GET /tasks/{id} — Buscar tarefa por ID
+    // ============================================================
+    @GetMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Buscar tarefa por ID&quot;, description = &quot;Retorna uma tarefa específica pelo seu ID&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tarefa encontrada&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tarefa não encontrada&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;TaskResponseDTO&gt; findById(
+            @Parameter(description = &quot;ID da tarefa&quot;, example = &quot;1&quot;)
+            @PathVariable Long id) {
+<span class="fc" id="L73">        return ResponseEntity.ok(taskService.findById(id));</span>
+    }
+
+    // ============================================================
+    // PUT /tasks/{id} — Atualizar tarefa completa
+    // ============================================================
+    @PutMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Atualizar tarefa&quot;, description = &quot;Atualiza todos os dados de uma tarefa existente&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tarefa atualizada com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Dados inválidos&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tarefa não encontrada&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;TaskResponseDTO&gt; update(
+            @Parameter(description = &quot;ID da tarefa&quot;, example = &quot;1&quot;)
+            @PathVariable Long id,
+            @Valid @RequestBody TaskRequestDTO dto) {
+<span class="fc" id="L90">        return ResponseEntity.ok(taskService.update(id, dto));</span>
+    }
+
+    // ============================================================
+    // PATCH /tasks/{id}/status — Atualizar apenas o status
+    // ============================================================
+    @PatchMapping(&quot;/{id}/status&quot;)
+    @Operation(summary = &quot;Atualizar status da tarefa&quot;,
+               description = &quot;Atualiza somente o status de uma tarefa. Tarefas CANCELLED não podem ser reativadas.&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Status atualizado com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tarefa não encontrada&quot;, content = @Content),
+        @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Operação inválida (ex: reativar tarefa cancelada)&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;TaskResponseDTO&gt; updateStatus(
+            @Parameter(description = &quot;ID da tarefa&quot;, example = &quot;1&quot;)
+            @PathVariable Long id,
+            @Parameter(description = &quot;Novo status&quot;, example = &quot;IN_PROGRESS&quot;)
+            @RequestParam TaskStatus status) {
+<span class="fc" id="L109">        return ResponseEntity.ok(taskService.updateStatus(id, status));</span>
+    }
+
+    // ============================================================
+    // DELETE /tasks/{id} — Deletar tarefa
+    // ============================================================
+    @DeleteMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Deletar tarefa&quot;, description = &quot;Remove uma tarefa do sistema pelo ID&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Tarefa removida com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Tarefa não encontrada&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;Void&gt; delete(
+            @Parameter(description = &quot;ID da tarefa&quot;, example = &quot;1&quot;)
+            @PathVariable Long id) {
+<span class="fc" id="L124">        taskService.delete(id);</span>
+<span class="fc" id="L125">        return ResponseEntity.noContent().build();</span>
+    }
+
+    // ============================================================
+    // GET /tasks/filter — Filtrar tarefas por status (critério)
+    // ============================================================
+    @GetMapping(&quot;/filter&quot;)
+    @Operation(summary = &quot;Filtrar tarefas por status&quot;,
+               description = &quot;Retorna tarefas filtradas pelo status informado como query parameter&quot;)
+    @ApiResponses({
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Tarefas filtradas retornadas com sucesso&quot;),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Status inválido&quot;, content = @Content)
+    })
+    public ResponseEntity&lt;List&lt;TaskResponseDTO&gt;&gt; findByStatus(
+            @Parameter(description = &quot;Status para filtro&quot;, example = &quot;PENDING&quot;)
+            @RequestParam TaskStatus status) {
+<span class="fc" id="L141">        return ResponseEntity.ok(taskService.findByStatus(status));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
