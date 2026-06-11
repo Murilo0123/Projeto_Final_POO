@@ -1,12 +1,27 @@
 # Task Manager API 📋
 
-Microserviço RESTful desenvolvido com **Spring Boot** para gerenciamento de tarefas, como projeto da disciplina de Programação Orientada a Objetos.
+Microserviço RESTful desenvolvido com **Spring Boot** para gerenciamento de tarefas, como projeto final da disciplina de Programação Orientada a Objetos.
 
 ---
 
-## 🎯 Propósito
+## 🌐 API em Produção
 
-API para criação, listagem, atualização e remoção de **tarefas** organizadas por **categorias**, aplicando conceitos de POO, arquitetura em camadas, persistência com JPA, documentação com Swagger e testes unitários com JUnit 5 + Mockito.
+| | |
+|---|---|
+| **API Base URL** | https://projeto-final-poo-3jx3.onrender.com |
+| **Documentação Swagger** | https://projeto-final-poo-3jx3.onrender.com/swagger-ui.html |
+
+---
+
+## 🎯 Sobre o Projeto
+
+Sistema de gerenciamento de tarefas com suporte a categorias, desenvolvido como microserviço REST. A API permite criar, listar, atualizar e remover tarefas organizadas por categorias, com validações, tratamento de erros padronizado e documentação interativa.
+
+**Conceitos de POO aplicados:**
+- Encapsulamento via DTOs e separação em camadas
+- Herança e polimorfismo nas exceções customizadas
+- Abstração via interfaces de repositório (Spring Data JPA)
+- Injeção de dependência via construtor em todas as classes
 
 ---
 
@@ -18,70 +33,33 @@ API para criação, listagem, atualização e remoção de **tarefas** organizad
 | Spring Boot 3.3 | Framework principal |
 | Spring Data JPA | Persistência de dados |
 | H2 Database | Banco em memória (desenvolvimento) |
-| PostgreSQL | Banco relacional (produção) |
+| PostgreSQL + Supabase | Banco relacional (produção) |
 | Springdoc OpenAPI | Documentação Swagger |
 | JUnit 5 + Mockito | Testes unitários |
 | JaCoCo | Cobertura de testes (mínimo 90%) |
 | Maven | Gerenciamento de dependências |
+| Render | Plataforma de deploy |
 
 ---
 
-## 🏗️ Arquitetura
+## 🏗️ Arquitetura em Camadas
 
 ```
 src/main/java/com/faculdade/taskmanager/
-├── config/          # Configuração do Swagger (OpenApiConfig)
-├── controller/      # Camada de controle (TaskController, CategoryController)
-├── service/         # Regras de negócio (TaskService, CategoryService)
-├── repository/      # Acesso ao banco via JPA (TaskRepository, CategoryRepository)
-├── model/           # Entidades JPA (Task, Category, TaskStatus)
-├── dto/             # Data Transfer Objects (request/response)
-└── exception/       # Exceções customizadas e GlobalExceptionHandler
-```
-
----
-
-## 🚀 Como Rodar Localmente
-
-### Pré-requisitos
-
-- Java 17+
-- Maven 3.8+
-- Git
-
-### Passos
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/Murilo0123/Projeto_Final_POO.git
-cd taskmanager
-
-# 2. Execute a aplicação (perfil dev com H2)
-mvn spring-boot:run
-
-# 3. Acesse o Swagger UI
-http://localhost:8080/swagger-ui.html
-
-# 4. Acesse o console H2 (banco em memória)
-http://localhost:8080/h2-console
-# JDBC URL: jdbc:h2:mem:taskdb | User: sa | Password: (vazio)
-```
-
-### Executar os Testes
-
-```bash
-# Roda os testes e gera relatório de cobertura JaCoCo
-mvn test
-
-# Relatório de cobertura gerado em:
-# target/site/jacoco/index.html
+├── config/          → Configuração do Swagger (OpenApiConfig)
+├── controller/      → TaskController, CategoryController
+├── service/         → TaskService, CategoryService
+├── repository/      → TaskRepository, CategoryRepository
+├── model/           → Task, Category, TaskStatus
+├── dto/             → TaskRequestDTO, TaskResponseDTO, CategoryRequestDTO, CategoryResponseDTO
+└── exception/       → ResourceNotFoundException, BusinessException, GlobalExceptionHandler
 ```
 
 ---
 
 ## 📚 Rotas da API
 
-### Tarefas (`/tasks`)
+### Tarefas — `/tasks`
 
 | Método | Rota | Descrição |
 |---|---|---|
@@ -91,9 +69,9 @@ mvn test
 | `PUT` | `/tasks/{id}` | Atualizar tarefa completa |
 | `PATCH` | `/tasks/{id}/status` | Atualizar apenas o status |
 | `DELETE` | `/tasks/{id}` | Remover tarefa |
-| `GET` | `/tasks/filter?status=PENDING` | Filtrar tarefas por status |
+| `GET` | `/tasks/filter?status=` | Filtrar tarefas por status |
 
-### Categorias (`/categories`)
+### Categorias — `/categories`
 
 | Método | Rota | Descrição |
 |---|---|---|
@@ -103,109 +81,149 @@ mvn test
 | `PUT` | `/categories/{id}` | Atualizar categoria |
 | `DELETE` | `/categories/{id}` | Remover categoria |
 
-### Status disponíveis: `PENDING` | `IN_PROGRESS` | `DONE` | `CANCELLED`
+### Status disponíveis
+`PENDING` | `IN_PROGRESS` | `DONE` | `CANCELLED`
 
 ---
 
-## 💡 Exemplos de Uso (cURL)
+## 💡 Exemplos de Uso
 
 ### Criar uma categoria
 ```bash
-curl -X POST http://localhost:8080/categories \
+curl -X POST https://projeto-final-poo-3jx3.onrender.com/categories \
   -H "Content-Type: application/json" \
   -d '{"name": "Estudos", "description": "Tarefas acadêmicas"}'
 ```
 
 ### Criar uma tarefa
 ```bash
-curl -X POST http://localhost:8080/tasks \
+curl -X POST https://projeto-final-poo-3jx3.onrender.com/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Estudar Spring Boot",
     "description": "Revisar capítulo de JPA",
     "status": "PENDING",
-    "dueDate": "2025-12-31",
+    "dueDate": "2026-12-31",
     "categoryId": 1
   }'
 ```
 
 ### Listar todas as tarefas
 ```bash
-curl http://localhost:8080/tasks
+curl https://projeto-final-poo-3jx3.onrender.com/tasks
 ```
 
-### Atualizar status para IN_PROGRESS
+### Atualizar status
 ```bash
-curl -X PATCH "http://localhost:8080/tasks/1/status?status=IN_PROGRESS"
+curl -X PATCH "https://projeto-final-poo-3jx3.onrender.com/tasks/1/status?status=IN_PROGRESS"
 ```
 
 ### Filtrar tarefas por status
 ```bash
-curl "http://localhost:8080/tasks/filter?status=PENDING"
+curl "https://projeto-final-poo-3jx3.onrender.com/tasks/filter?status=PENDING"
 ```
 
 ### Deletar uma tarefa
 ```bash
-curl -X DELETE http://localhost:8080/tasks/1
+curl -X DELETE https://projeto-final-poo-3jx3.onrender.com/tasks/1
 ```
 
 ---
 
-## 🌐 Deploy em Produção
+## 🔒 Tratamento de Erros
 
-### Link público da API
+Todos os erros seguem um formato padronizado:
 
-> **https://taskmanager-api.onrender.com** *(substitua pelo link gerado após o deploy)*
+```json
+{
+  "timestamp": "2026-06-09T03:46:49.763012126",
+  "status": 404,
+  "error": "Recurso Não Encontrado",
+  "message": "Tarefa com ID 99 não encontrada.",
+  "details": null
+}
+```
 
-### Como foi realizado o deploy (Render + Supabase)
-
-1. **Banco de dados:** Criado um banco PostgreSQL gratuito no [Supabase](https://supabase.com).
-2. **Aplicação:** Deploy realizado no [Render](https://render.com) usando o buildpack de Java.
-3. **Variáveis de ambiente** configuradas no painel do Render:
-   - `DATABASE_URL` → URL de conexão do Supabase
-   - `DATABASE_USERNAME` → usuário do banco
-   - `DATABASE_PASSWORD` → senha do banco
-   - `SPRING_PROFILES_ACTIVE` → `prod`
-4. O Render detecta automaticamente o `pom.xml` e executa `mvn package` para gerar o `.jar`.
-
-> **Importante:** nenhuma senha ou credencial está no código-fonte ou nos arquivos `.properties`. Todas as informações sensíveis são gerenciadas via variáveis de ambiente na plataforma.
+| Código | Situação |
+|---|---|
+| `400` | Dados de entrada inválidos (validação) |
+| `404` | Recurso não encontrado |
+| `422` | Violação de regra de negócio |
+| `500` | Erro interno inesperado |
 
 ---
 
-## 👥 Divisão de Tarefas
+## 🚀 Como Rodar Localmente
 
-| Integrante | Responsabilidade |
+### Pré-requisitos
+- Java 17 (JDK)
+- Maven 3.8+
+
+### Passos
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/Murilo0123/Projeto_Final_POO.git
+cd Projeto_Final_POO
+
+# 2. Configure o JAVA_HOME (Windows)
+$env:JAVA_HOME = "C:\Users\seu-usuario\.jdks\temurin-17.0.19"
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+
+# 3. Compile
+mvn clean package -DskipTests
+
+# 4. Execute
+java -jar target/taskmanager-0.0.1-SNAPSHOT.jar
+
+# 5. Acesse
+# Swagger: http://localhost:8080/swagger-ui.html
+# H2 Console: http://localhost:8080/h2-console
+# JDBC URL: jdbc:h2:mem:taskdb | User: sa | Password: (vazio)
+```
+
+### Rodar os testes
+
+```bash
+mvn test
+# Relatório JaCoCo: target/site/jacoco/index.html
+```
+
+---
+
+## ☁️ Deploy (Render + Supabase)
+
+1. Banco PostgreSQL criado no [Supabase](https://supabase.com)
+2. Tabelas criadas manualmente via SQL Editor do Supabase
+3. Aplicação deployada no [Render](https://render.com) com buildpack Java
+4. Variáveis de ambiente configuradas no painel do Render:
+
+| Variável | Descrição |
 |---|---|
-| Integrante 1 | Model (`Task`, `Category`, `TaskStatus`) e repositórios JPA |
-| Integrante 2 | `TaskService` e regras de negócio |
-| Integrante 3 | `CategoryService` e tratamento de exceções |
-| Integrante 4 | `TaskController` e `CategoryController` |
-| Integrante 5 | Testes unitários (`TaskServiceTest`, `CategoryServiceTest`) |
-| Integrante 6 | Testes do controlador, configuração Swagger, deploy e README |
+| `SPRING_DATASOURCE_URL` | URL JDBC do Supabase (Connection Pooler) |
+| `SPRING_DATASOURCE_USERNAME` | Usuário do banco |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do banco |
+| `SPRING_PROFILES_ACTIVE` | `prod` |
+
+> Nenhuma credencial está no código-fonte. Todas as informações sensíveis são gerenciadas via variáveis de ambiente.
 
 ---
 
 ## 📊 Cobertura de Testes
 
-Cobertura mínima exigida: **90%** (verificada via JaCoCo).
+Cobertura mínima configurada: **90%** via JaCoCo.
 
-Para visualizar o relatório após rodar os testes:
-```
-target/site/jacoco/index.html
-```
+Testes implementados:
+- `TaskServiceTest` — 12 casos de teste (criação, listagem, busca, atualização, regras de negócio, deleção)
+- `CategoryServiceTest` — 9 casos de teste
+- `TaskControllerTest` — 9 casos de teste com MockMvc
 
 ---
 
-## 🌿 Padrão de Branches e Commits
+## 🌿 Branches e Commits
 
-- `main` — produção estável
-- `develop` — integração
-- `feature/nome-da-feature` — desenvolvimento de funcionalidades
-
-**Padrão de commits:**
 ```
-feat: adiciona endpoint de criação de tarefas
-fix: corrige validação de data futura no DTO
-test: adiciona testes para TaskService
-docs: atualiza README com instruções de deploy
+main        → produção estável
+develop     → integração
+feature/*   → desenvolvimento de funcionalidades
 ```
